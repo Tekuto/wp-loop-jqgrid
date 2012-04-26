@@ -169,22 +169,12 @@ function wp_data_jqgrid($params){
 				case 'functions':
 					$query = "SELECT * 
 							FROM $wpdb->posts
-LEFT JOIN $wpdb->postmeta ON($wpdb->posts.ID = $wpdb->postmeta.post_id AND $wpdb->postmeta.meta_key='date_end')
 							LEFT JOIN $wpdb->term_relationships ON ( $wpdb->posts.ID = $wpdb->term_relationships.object_id ) 
 							LEFT JOIN $wpdb->term_taxonomy ON ( $wpdb->term_relationships.term_taxonomy_id = $wpdb->term_taxonomy.term_taxonomy_id ) 
 							LEFT JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id ) 
 							WHERE post_status = 'publish'
-							AND post_type = '$posttype'";
-					if($_GET['tax_id']!=0){
-					$query .= "AND term_id IN ($t_id)
-							AND taxonomy = '$tax_slug'";
-					}
-
-if($status == 'open'){
-$query .= " AND (meta_value = ''
-OR meta_value IS NULL)";
-}
-					$query .= "
+							AND post_type = '$posttype'
+							AND taxonomy = '$tax_slug'
 							GROUP BY $wpdb->posts.ID
 							ORDER BY name $sord 
 							LIMIT $start, $limit";
@@ -205,12 +195,7 @@ OR meta_value IS NULL)";
 							AND taxonomy = '$tax_slug'";
 					}
 
-if($status == 'open'){
-$query .= " AND (meta_value = ''
-OR meta_value IS NULL)";
-}
-
-					$query .= "     GROUP BY $wpdb->posts.ID
+					$query .= "	GROUP BY $wpdb->posts.ID
 							ORDER BY $sidx $sord
 							LIMIT $start, $limit";
 					$SQL = $wpdb->get_results($query);

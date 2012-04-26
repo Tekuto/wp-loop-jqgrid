@@ -15,21 +15,24 @@ function wp_view_jqgrid(){
 		}
 	}
 	
-	$ajaxurl = "http://blog.etagi.com/wp-admin/admin-ajax.php?action=wp_data_jqgrid&posttype=".$posttype."&tax_slug=".$tax_slug."&tax_id=".$tax_id."&status=".$status."&fields=".$fields;
 ?>
+<form metod="GET" action="">
+<select name="status_form" onchange="this.form.submit();" >
+<?php if(isset($_GET['status_form']) AND $_GET['status_form']=='all'){ ?>
+<option value="open">Открытые</option>
+<option value="all" selected="selected">Все</option> <?php
+}else{ ?>
+<option value="open" selected="selected">Открытые</option>
+<option value="all">Все</option> <?php
+} ?>
+</select>
+</form>
+<?php 
+if(isset($_GET['status_form'])){
+$status = $_GET['status_form'];
+}
+$ajaxurl = "http://blog1.etagi.com/wp-admin/admin-ajax.php?action=wp_data_jqgrid&posttype=".$posttype."&tax_slug=".$tax_slug."&tax_id=".$tax_id."&fields=".$fields."&status=".$status; ?>
 
-<select id="status"><option value="open">Открытые</option><option value="all">Все</option></select>
-<script>
-    function displayVals() {
-      var singleValues = jQuery("#status").val();
-       jQuery().html(singleValues);
-    }
-
-    jQuery("select").change(displayVals);
-    displayVals();
-
-</script>
-<p></p>
 	<table id="list"><tr><td/></tr></table> 
 	<div id="pager"></div>
 		

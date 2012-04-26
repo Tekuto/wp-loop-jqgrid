@@ -195,7 +195,11 @@ function wp_data_jqgrid($params){
 							AND taxonomy = '$tax_slug'";
 					}
 
-					$query .= "	GROUP BY $wpdb->posts.ID
+if($status == 'open'){
+$query .= "AND meta_value = ''";
+}
+
+					$query .= "     GROUP BY $wpdb->posts.ID
 							ORDER BY $sidx $sord
 							LIMIT $start, $limit";
 					$SQL = $wpdb->get_results($query);

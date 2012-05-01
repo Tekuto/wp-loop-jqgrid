@@ -31,7 +31,7 @@ function wp_view_jqgrid(){
 if(isset($_GET['status_form'])){
 $status = $_GET['status_form'];
 }
-$ajaxurl = "http://blog.etagi.com/wp-admin/admin-ajax.php?action=wp_data_jqgrid&posttype=".$posttype."&tax_slug=".$tax_slug."&tax_id=".$tax_id."&fields=".$fields."&status=".$status; ?>
+$ajaxurl = "/wp-admin/admin-ajax.php?action=wp_data_jqgrid&posttype=".$posttype."&tax_slug=".$tax_slug."&tax_id=".$tax_id."&fields=".$fields."&status=".$status; ?>
 
 	<table id="list"><tr><td/></tr></table> 
 	<div id="pager"></div>

@@ -44,13 +44,50 @@ function wp_data_jqgrid($params){
 
 		if($start <0) $start = 0;
 		
-/* Start of data */
 		
-		$s = "<?xml version='1.0' encoding='utf-8'?>";
-		$s.=  "<rows>";
-		$s.= "<page>".$page."</page>";
-		$s.= "<total>".$total_pages."</total>";
-		$s.= "<records>".$count."</records>";
+		global $wpdb, $post;
+		$qwhere = "";
+		$qfield = "";
+		$qjoin = "";
+		
+		if(isset($_POST['_search']) && $_POST['_search'] == 'true'){
+			$qval = $_POST['searchString'];
+			foreach($_POST as $pkey=>$pvalue){
+				switch ($pkey){
+					case 'post_title':
+						$qwhere .= " AND $wpdb->posts.post_title LIKE '%$pvalue%'";
+						break;
+					case 'responsible':
+					case 'initiator':
+					
+						$qfield .= " ,".$pkey."fio.ID as f_id ";
+						$qjoin  .=  "
+							JOIN wp_postmeta ".$pkey."postmeta ON (".$pkey."postmeta.post_id = wp_posts.ID AND ".$pkey."postmeta.meta_key = '$pkey')
+							JOIN wp_posts ".$pkey."fio ON (".$pkey."fio.id = ".$pkey."postmeta.meta_value  AND ".$pkey."fio.post_title LIKE '%$pvalue%' ) 
+						";
+						$qwhere .= " ";
+						break;
+					case 'date_deadline':
+						$qjoin  .=  "
+							JOIN wp_postmeta ".$pkey."postmeta ON (".$pkey."postmeta.post_id = wp_posts.ID 
+							AND ".$pkey."postmeta.meta_key= 'date_deadline' 
+							AND DATE_FORMAT(".$pkey."postmeta.meta_value,'%d\.%m\.%Y') = '$pvalue' )						
+						";
+						$qwhere .= "";
+						break;
+					case 'functions2':
+						$qjoin  .=  "
+							JOIN wp_postmeta ".$pkey."postmeta ON (".$pkey."postmeta.post_id = wp_posts.ID 
+							AND ".$pkey."postmeta.meta_key= '$pkey' 
+							AND ".$pkey."postmeta.meta_value LIKE '%$pvalue%' )						
+						";
+						$qwhere .= "";
+						break;
+				}
+			}
+		}
+		
+
 
 /* Get data */		
 
@@ -180,10 +217,10 @@ LEFT JOIN $wpdb->postmeta ON($wpdb->posts.ID = $wpdb->postmeta.post_id AND $wpdb
 							AND taxonomy = '$tax_slug'";
 					}
 
-if($status == 'open'){
-$query .= " AND (meta_value = ''
-OR meta_value IS NULL)";
-}
+					if($status == 'open'){
+						$query .= " AND (meta_value = ''
+						OR meta_value IS NULL)";
+					}
 					$query .= "
 							GROUP BY $wpdb->posts.ID
 							ORDER BY name $sord 
@@ -192,37 +229,52 @@ OR meta_value IS NULL)";
 					break;
 					
 				default:
-					$query = "SELECT * FROM $wpdb->posts
+					$query = "SELECT $wpdb->posts.* $qfield FROM $wpdb->posts
+							$qjoin
 							LEFT JOIN $wpdb->postmeta ON($wpdb->posts.ID = $wpdb->postmeta.post_id AND $wpdb->postmeta.meta_key='date_end')
 							LEFT JOIN $wpdb->term_relationships
 								ON($wpdb->posts.ID = $wpdb->term_relationships.object_id)
 							LEFT JOIN $wpdb->term_taxonomy
 								ON($wpdb->term_relationships.term_taxonomy_id = $wpdb->term_taxonomy.term_taxonomy_id)
-							WHERE post_status='publish'
-							AND post_type='$posttype'";
+								
+							WHERE $wpdb->posts.post_status='publish'
+							AND $wpdb->posts.post_type='$posttype' 
+							$qwhere
+							";
+						
 					if($_GET['tax_id']!=0){
-					$query .= "AND term_id IN ($t_id)
+						$query .= "AND term_id IN ($t_id)
 							AND taxonomy = '$tax_slug'";
 					}
 
-if($status == 'open'){
-$query .= " AND (meta_value = ''
-OR meta_value IS NULL)";
-}
+					if($status == 'open'){
+						$query .= " AND ($wpdb->postmeta.meta_value = ''
+						OR $wpdb->postmeta.meta_value IS NULL)";
+					}
 
 					$query .= "     GROUP BY $wpdb->posts.ID
-							ORDER BY $sidx $sord
+							ORDER BY $wpdb->posts.$sidx $sord
 							LIMIT $start, $limit";
 					$SQL = $wpdb->get_results($query);
+					
 					break;	
 	}	
-
+	//die(print_r($query));
+	//die(print_r($SQL));
 /* Set and get data fields */
 	
 	$rows = explode(',', $fields);
+	/* Start of data */
 		
-	foreach($SQL as $item){
-				global $wpdb, $post;
+		$s = "<?xml version='1.0' encoding='utf-8'?>";
+		$s.=  "<rows>";
+		$s.= "<page>".$page."</page>";
+		$s.= "<total>".( $_POST['_search'] == "true" ? ceil(count($SQL) / $count) :$total_pages) ."</total>";
+		$s.= "<records>" . count($SQL) ."</records>";
+		
+		foreach($SQL as $item){
+		
+				//global $wpdb, $post;
 				
 				$a = 0;
 				$search_op = 'cn';
@@ -274,6 +326,7 @@ OR meta_value IS NULL)";
 							break;
 						case 'functions':
 							$category_terms = get_the_terms($item->ID,'functions');
+							
 							if(is_array($category_terms)){
 								unset($cats);
 								foreach ($category_terms as $k => $category)
@@ -394,6 +447,7 @@ OR meta_value IS NULL)";
 				if ($a == 1)
 					continue;
 				
+		
 				$id = '<cell><![CDATA[<a href="'.$item->guid.'">' . $item->ID . '</a>]]></cell>';
 				
 				$post_title = '<cell><![CDATA[<a href="' .$item->guid. '">' . $item->post_title . '</a>]]></cell>';
@@ -457,7 +511,7 @@ OR meta_value IS NULL)";
 						$s .= $$row;
 					}
 				$s.= '</row>';
-	}
+	} 
 		$s .= '</rows>';
 
 	header("Content-type: text/xml;charset=utf-8");

@@ -12,7 +12,7 @@ Set default attributes.
 */
 
 $default_atts = array(
-	'posttype'=>'cases',
+	"posttype"=>"cases",
 	"tax_slug"=>"functions",
 	"tax_id"=>"0",
 	"title"=>"Дела",

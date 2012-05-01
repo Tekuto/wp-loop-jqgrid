@@ -2,6 +2,7 @@
 /*
 Plugin Name: WP Loop jqGrid
 Description: Wordpress Loop by jqGrid with function and shortcode
+Version: 0.5.2
 */
 
 include_once 'wp_view_jqgrid.php';
